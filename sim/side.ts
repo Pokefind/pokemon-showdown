@@ -115,10 +115,18 @@ export class Side {
 
 		this.team = team;
 		this.pokemon = [];
+		this.pokemonLeft = 0;
+		this.totalFainted = 0;
 		for (let i = 0; i < this.team.length && i < 24; i++) {
 			// console.log("NEW POKEMON: " + (this.team[i] ? this.team[i].name : '[unidentified]'));
 			this.pokemon.push(new Pokemon(this.team[i], this));
 			this.pokemon[i].position = i;
+			if (this.pokemon[i].hp == 0) {
+				this.pokemon[i].fainted = true;
+				this.totalFainted++;
+			} else {
+				this.pokemonLeft++;
+			}
 		}
 
 		switch (this.battle.gameType) {
@@ -132,10 +140,8 @@ export class Side {
 			this.active = [null!];
 		}
 
-		this.pokemonLeft = this.pokemon.length;
 		this.faintedLastTurn = null;
 		this.faintedThisTurn = null;
-		this.totalFainted = 0;
 		this.zMoveUsed = false;
 		this.dynamaxUsed = this.battle.gen !== 8;
 
