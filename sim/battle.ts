@@ -2481,7 +2481,15 @@ export class Battle {
 		switch (action.choice) {
 		case 'start': {
 			for (const side of this.sides) {
-				if (side.pokemonLeft) side.pokemonLeft = side.pokemon.length;
+				let pokemonLeft = 0;
+				if (side.pokemonLeft) {
+					for (const pokemon of side.pokemon) {
+						if (pokemon.hp > 0) {
+							pokemonLeft++;
+						}
+					}
+					side.pokemonLeft = pokemonLeft;
+				}
 			}
 
 			this.add('start');
