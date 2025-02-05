@@ -2164,7 +2164,7 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
     	color: "Unknown",
     	eggGroups: ["human-like", "field"],
  	},
- 	jataroskamory: {
+ 	jataroskarmory: {
     	num: -10177,
     	name: "Jataro Skarmory",
     	tags: ["Jataro"],
