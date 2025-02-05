@@ -2112,9 +2112,9 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
     	color: "Unknown",
     	eggGroups: ["amorphous"],
  	},
- 	zeinovaamoongus: {
+ 	zeinovaamoonguss: {
     	num: -10173,
-    	name: "Zeinova Amoongus",
+    	name: "Zeinova Amoonguss",
     	tags: ["Zeinova"],
     	types: ["Fighting", "Steel"],
     	genderRatio: {M:0.5, F:0.5 },
