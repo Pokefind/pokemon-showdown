@@ -2086,9 +2086,9 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
     	color: "Unknown",
     	eggGroups: ["undiscovered"],
  	},
- 	zeinovaescalavier: {
+ 	zeinovaescavalier: {
     	num: -10171,
-    	name: "Zeinova Escalavier",
+    	name: "Zeinova Escavalier",
     	tags: ["Zeinova"],
     	types: ["Bug", "Fire"],
     	genderRatio: {M:0.5, F:0.5 },
