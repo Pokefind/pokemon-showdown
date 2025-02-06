@@ -2177,7 +2177,7 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
     	color: "Unknown",
     	eggGroups: ["flying"],
  	},
-	haikoubronzong: {
+	shilohbronzong: {
     	num: -10178,
     	name: "Shiloh Bronzong",
     	tags: ["Shiloh"],
