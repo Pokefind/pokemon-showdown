@@ -749,6 +749,7 @@ export class Side {
 		}
 
 		if (targetPokemon.fainted) {
+			console.log(targetPokemon.name, targetPokemon.level);
 			return this.emitChoiceError(`Can't switch: You can't switch to a fainted Pokémon`);
 		}
 
@@ -910,6 +911,7 @@ export class Side {
 			const canSwitchIn = this.pokemon.slice(this.active.length).filter(pokemon => pokemon && !pokemon.fainted).length;
 			forcedSwitches = Math.min(canSwitchOut, canSwitchIn);
 			forcedPasses = canSwitchOut - forcedSwitches;
+			console.log("yo castelwars: ", canSwitchOut, canSwitchIn, forcedSwitches, forcedPasses);
 		}
 		this.choice = {
 			cantUndo: false,
