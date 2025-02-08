@@ -1245,7 +1245,8 @@ export class Battle {
 			for (let i = 0; i < this.sides.length; i++) {
 				const side = this.sides[i];
 				if (!side.pokemonLeft) continue;
-				const switchTable = side.active.map(pokemon => !!pokemon?.switchFlag);
+				let switchableCount = this.possibleSwitches(side).length;
+				const switchTable = side.active.map(pokemon => switchableCount-- > 0 && !!pokemon?.switchFlag);
 				if (switchTable.some(Boolean)) {
 					requests[i] = {forceSwitch: switchTable, side: side.getRequestData()};
 				}
@@ -2481,7 +2482,15 @@ export class Battle {
 		switch (action.choice) {
 		case 'start': {
 			for (const side of this.sides) {
-				if (side.pokemonLeft) side.pokemonLeft = side.pokemon.length;
+				let pokemonLeft = 0;
+				if (side.pokemonLeft) {
+					for (const pokemon of side.pokemon) {
+						if (pokemon.hp > 0) {
+							pokemonLeft++;
+						}
+					}
+					side.pokemonLeft = pokemonLeft;
+				}
 			}
 
 			this.add('start');
@@ -2737,6 +2746,8 @@ export class Battle {
 				}
 				if (!reviveSwitch) switches[i] = false;
 			} else if (switches[i]) {
+				let possibleSwitches = this.possibleSwitches(this.sides[i]).length;
+
 				for (const pokemon of this.sides[i].active) {
 					if (pokemon.hp && pokemon.switchFlag && pokemon.switchFlag !== 'revivalblessing' &&
 							!pokemon.skipBeforeSwitchOutEventFlag) {
@@ -2748,10 +2759,18 @@ export class Battle {
 							switches[i] = this.sides[i].active.some(sidePokemon => sidePokemon && !!sidePokemon.switchFlag);
 						}
 					}
+
+					if (pokemon.switchFlag) {
+						if (possibleSwitches > 0) {
+							possibleSwitches--;
+						} else {
+							pokemon.switchFlag = false;
+						}
+					}
 				}
 			}
 		}
-
+		
 		for (const playerSwitch of switches) {
 			if (playerSwitch) {
 				this.makeRequest('switch');
