@@ -123,6 +123,7 @@ export class BattleActions {
 			oldActive.statsRaisedThisTurn = false;
 			oldActive.statsLoweredThisTurn = false;
 			oldActive.position = pokemon.position;
+			if (oldActive.fainted) oldActive.status = '';
 			pokemon.position = pos;
 			side.pokemon[pokemon.position] = pokemon;
 			side.pokemon[oldActive.position] = oldActive;
