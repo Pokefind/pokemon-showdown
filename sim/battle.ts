@@ -1224,6 +1224,18 @@ export class Battle {
 		}
 
 		if (this.sides.every(side => side.isChoiceDone())) {
+			console.error('Debug - Choices are done immediately after a request');
+			console.error('Debug - Requests:', requests);
+			for (const side of this.sides) {
+				console.error('Debug - Choice:', side.choice);
+				console.error('Debug - Choice action length:', side.choice.actions.length);
+				console.error('Debug - Request state:', side.requestState);
+				console.error('Debug - Active Request:', side.activeRequest);
+				console.error('Debug - Active length:', side.active.length);
+				console.error('Debug - Pokemon:', side.pokemon);
+				console.error('Debug - Pokemon left:', side.pokemonLeft);
+			}
+			console.error('Debug - Request state:', this.requestState);
 			throw new Error(`Choices are done immediately after a request`);
 		}
 	}
@@ -1246,7 +1258,8 @@ export class Battle {
 				const side = this.sides[i];
 				if (!side.pokemonLeft) continue;
 				let switchableCount = this.possibleSwitches(side).length;
-				const switchTable = side.active.map(pokemon => switchableCount-- > 0 && !!pokemon?.switchFlag);
+				const switchTable = side.active.map(pokemon => !!pokemon?.switchFlag && switchableCount-- > 0);
+
 				if (switchTable.some(Boolean)) {
 					requests[i] = {forceSwitch: switchTable, side: side.getRequestData()};
 				}
@@ -2768,6 +2781,20 @@ export class Battle {
 						}
 					}
 				}
+
+				let anySwitch = false;
+				for (const pokemon of this.sides[i].active) {
+					if (pokemon.switchFlag) {
+						anySwitch = true;
+						break;
+					}
+				}
+
+				if (!anySwitch) {
+					console.info(`>>>>>>>>>>>>>>>>>>>>>>>> No switch flag found, setting ${i} to false`);
+					switches[i] = false;
+				}
+				
 			}
 		}
 		
