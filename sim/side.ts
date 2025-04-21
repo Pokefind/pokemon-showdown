@@ -536,9 +536,10 @@ export class Side {
 				return this.emitChoiceError(`Can't move: Invalid target for ${move.name}`);
 			}
 		} else {
-			if (targetLoc) {
-				return this.emitChoiceError(`Can't move: You can't choose a target for ${move.name}`);
-			}
+			// if (targetLoc) {
+			// 	return this.emitChoiceError(`Can't move: You can't choose a target for ${move.name}`);
+			// }
+			targetLoc = 0;
 		}
 
 		const lockedMove = pokemon.getLockedMove();
