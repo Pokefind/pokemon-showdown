@@ -37,4 +37,27 @@ export const Items: {[k: string]: ModdedItemData} = {
 		gen: 8,
 		isNonstandard: "Past",
 	},
+	eviolite: {
+	inherit: true,
+
+	onModifyDef(def, pokemon) {
+		const banned = ['primeape', 'bisharp', 'dunsparce', 'girafarig', 'ursaring', 'zeinovabisharp', 'jatarodunsparce', 'jataroursaring', 'stantler', 'basculin'];
+
+		if (banned.includes(this.toID(pokemon.baseSpecies.name))) return;
+
+		if (pokemon.baseSpecies.nfe) {
+			return this.chainModify(1.5);
+		}
+	},
+
+	onModifySpD(spd, pokemon) {
+		const banned = ['primeape', 'bisharp', 'dunsparce', 'girafarig', 'ursaring', 'zeinovabisharp', 'jatarodunsparce', 'jataroursaring', 'stantler', 'basculin'];
+
+		if (banned.includes(this.toID(pokemon.baseSpecies.name))) return;
+
+		if (pokemon.baseSpecies.nfe) {
+			return this.chainModify(1.5);
+		}
+	},
+},
 };
