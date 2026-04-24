@@ -126,6 +126,8 @@ export interface SideRequestData {
 	id: SideID;
 	pokemon: PokemonSwitchRequestData[];
 	noCancel?: boolean;
+	/** Pokefind: list of side condition keys for the request menu */
+	conditions?: string[];
 }
 export interface SwitchRequest {
 	wait?: undefined;
@@ -358,7 +360,7 @@ export class Side {
 		const data: SideRequestData = {
 			name: this.name,
 			id: this.id,
-			pokemon: [] as AnyObject[],
+			pokemon: [] as PokemonSwitchRequestData[],
 			conditions: Object.keys(this.sideConditions),
 		};
 		for (const pokemon of this.pokemon) {

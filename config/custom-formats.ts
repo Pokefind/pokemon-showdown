@@ -1,4 +1,4 @@
-export const Formats: FormatList = [
+export const Formats: import('../sim/dex-formats').FormatList = [
 	{
 		section: "Pokefind Custom Formats",
 	},

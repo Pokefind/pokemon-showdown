@@ -1,4 +1,4 @@
-export const Moves: { [k: string]: ModdedMoveData } = {
+export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 	vicegrip: {
 		num: 11,
 		accuracy: 100,
@@ -8,7 +8,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		pp: 30,
 		priority: 0,
 		flags: { contact: 1, protect: 1, mirror: 1, metronome: 1 },
-		secondary: null,
 		target: "normal",
 		type: "Normal",
 		contestType: "Tough"
@@ -26,7 +25,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			mirror: 1,
 
 		},
-		secondary: null,
 		target: "normal",
 		type: "Shadow"
 	},
@@ -44,7 +42,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 
 		},
 		critRatio: 2,
-		secondary: null,
 		target: "normal",
 		type: "Shadow"
 	},
@@ -61,7 +58,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			mirror: 1,
 
 		},
-		secondary: null,
 		target: "normal",
 		type: "Shadow"
 	},
@@ -99,7 +95,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			mirror: 1,
 
 		},
-		secondary: null,
 		target: "normal",
 		type: "Shadow"
 	},
@@ -137,7 +132,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			heal: 1,
 
 		},
-		secondary: null,
 		target: "normal",
 		type: "Shadow",
 		mindBlownRecoil: true,
@@ -206,7 +200,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			mirror: 1,
 
 		},
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Shadow"
 	},
@@ -222,7 +215,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			protect: 1,
 
 		},
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Shadow"
 	},
@@ -271,7 +263,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		priority: 0,
 		flags: { protect: 1, reflectable: 1, mirror: 1,  },
 		volatileStatus: "partiallytrapped",
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Shadow",
 		onHit(target, source, move) {
@@ -288,7 +279,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		priority: 0,
 		weather: "ShadowSky",
 		flags: {  },
-		secondary: null,
 		target: "all",
 		type: "Shadow"
 	},
@@ -306,7 +296,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 			target.side.removeSideCondition("lightscreen");
 			target.side.removeSideCondition("safeguard");
 		},
-		secondary: null,
 		target: "all",
 		type: "Shadow"
 	},
@@ -320,7 +309,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		priority: 0,
 		flags: { protect: 1, reflectable: 1, mirror: 1, sound: 1, bypasssub: 1 },
 		volatileStatus: "confusion",
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Shadow"
 	},
@@ -336,7 +324,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		boosts: {
 			evasion: -2
 		},
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Shadow"
 	},
@@ -349,7 +336,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		pp: 35,
 		priority: 0,
 		flags: { contact: 1, protect: 1 },
-		secondary: null,
 		target: "normal",
 		type: "Normal"
 	},
@@ -365,7 +351,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		boosts: {
 			def: -2
 		},
-		secondary: null,
 		target: "allAdjacentFoes",
 		type: "Normal"
 	},
@@ -413,7 +398,6 @@ export const Moves: { [k: string]: ModdedMoveData } = {
 		priority: 0,
 		flags: { contact: 1, protect: 1 },
 		multihit: [2, 5],
-		secondary: null,
 		target: "normal",
 		type: "Normal"
 	},
