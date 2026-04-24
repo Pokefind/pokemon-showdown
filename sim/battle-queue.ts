@@ -265,7 +265,7 @@ export class BattleQueue {
 				// TODO: what actually happens here?
 				if (target) action.targetLoc = action.pokemon.getLocOf(target);
 			}
-			action.originalTarget = action.pokemon.getAtLoc(action.targetLoc);
+			action.originalTarget = action.targetLoc ? action.pokemon.getAtLoc(action.targetLoc) : null;
 		}
 		if (!deferPriority) this.battle.getActionSpeed(action);
 		return actions as any;

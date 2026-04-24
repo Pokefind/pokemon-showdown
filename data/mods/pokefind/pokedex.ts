@@ -1,4 +1,4 @@
-export const Pokedex: {[k: string]: ModdedSpeciesData} = {
+export const Pokedex: import('../../../sim/dex-species').ModdedSpeciesDataTable = {
 	kyotodragonite: {
 		num: -10001,
 		name: "Kyoto Dragonite",
@@ -3576,5 +3576,16 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
 		weightkg: 320,
 		color: "White",
 		eggGroups: ["Undiscovered"],
+	},	
+	chubachu: {
+		num: 10001,
+		name: "Chubachu",
+		types: ["Electric"],
+		baseStats: {hp: 55, atk: 75, def: 60, spa: 50, spd: 50, spe: 50},
+		abilities: {0: "Static", H: "Lightning Rod"},
+		heightm: 0.4,
+		weightkg: 30,
+		color: "Yellow",
+		eggGroups: ["Field", "Fairy"],
 	},
 };
