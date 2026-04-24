@@ -1679,6 +1679,7 @@ export class Pokemon {
 		}
 		const d = this.hp;
 		this.hp = 0;
+		this.status = '';
 		this.switchFlag = false;
 		this.faintQueued = true;
 		this.battle.faintQueue.push({
