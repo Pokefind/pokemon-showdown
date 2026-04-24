@@ -117,6 +117,7 @@ export interface PokemonSet {
 	startingPPs?: number[];
 	startingMaxPPs?: number[];
 	startingHP?: number;
+	startingMaxHP?: number;
 	status?: string;
 	obedient?: boolean;
 }
