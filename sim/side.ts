@@ -120,14 +120,18 @@ export interface DynamaxOptions {
 	maxMoves: ({ move: string, target: MoveTarget, disabled?: boolean })[];
 	gigantamax?: string;
 }
+export interface SideConditionEntry {
+	id: string;
+	layers?: number;
+}
 export interface SideRequestData {
 	name: string;
 	/** Side ID (`p1`, `p2`, `p3`, or `p4`), not the ID of the side's name. */
 	id: SideID;
 	pokemon: PokemonSwitchRequestData[];
 	noCancel?: boolean;
-	/** Pokefind: list of side condition keys for the request menu */
-	conditions?: string[];
+	/** Pokefind: list of side conditions (with layer count for stackable hazards) for the request menu */
+	conditions?: SideConditionEntry[];
 }
 export interface SwitchRequest {
 	wait?: undefined;
@@ -361,7 +365,12 @@ export class Side {
 			name: this.name,
 			id: this.id,
 			pokemon: [] as PokemonSwitchRequestData[],
-			conditions: Object.keys(this.sideConditions),
+			conditions: Object.entries(this.sideConditions).map(([id, state]) => {
+				const entry: SideConditionEntry = { id };
+				const layers = (state as any)?.layers;
+				if (typeof layers === 'number') entry.layers = layers;
+				return entry;
+			}),
 		};
 		for (const pokemon of this.pokemon) {
 			data.pokemon.push(pokemon.getSwitchRequestData(forAlly));
@@ -1276,6 +1285,9 @@ export class Side {
 			case 'catch':
 				if (!this.chooseCatch()) return false;
 				break;
+			case 'item':
+				if (!this.chooseItem(data)) return false;
+				break;
 			default:
 				this.emitChoiceError(`Unrecognized choice: ${choiceString}`);
 				break;
@@ -1315,6 +1327,213 @@ export class Side {
 		this.choice.actions.push({
 			choice: 'catch',
 		} as ChosenAction);
+		return true;
+	}
+
+	/**
+	 * Pokefind: bag-item use as a battle choice. Format: "<itemId> <partySlot>"
+	 * where partySlot is 1-indexed across the team's full party (active + bench).
+	 * The heal/revive effect is applied immediately to the sim's Pokémon state
+	 * so the next request snapshot reflects the change. The action consumes the
+	 * player's turn slot but is excluded from queue resolution (handled in
+	 * battle-queue.ts).
+	 */
+	chooseItem(spec?: string): boolean | Side {
+		if (this.requestState !== 'move') {
+			return this.emitChoiceError(`Can't use item: You need a ${this.requestState} response`);
+		}
+		const index = this.getChoiceIndex();
+		if (index >= this.active.length) {
+			return this.emitChoiceError(`Can't use item: You sent more choices than unfainted Pokémon`);
+		}
+		const parts = (spec || '').trim().split(/\s+/);
+		const itemId = (parts[0] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+		if (!itemId) {
+			return this.emitChoiceError(`Can't use item: No item specified`);
+		}
+		const slotArg = parts[1];
+		// Optional 3rd arg: 1-indexed move slot for per-move PP items (Ether / Max Ether).
+		const moveSlotArg = parts[2];
+		let target: Pokemon | undefined;
+		if (!slotArg) {
+			target = this.pokemon[index];
+		} else {
+			// Try numeric (1-indexed party slot) first.
+			const numeric = parseInt(slotArg);
+			if (!isNaN(numeric) && numeric >= 1 && numeric <= this.pokemon.length) {
+				target = this.pokemon[numeric - 1];
+			} else {
+				// Fall back to name lookup (handles UUID-as-name in this codebase).
+				const lookup = slotArg.toLowerCase();
+				for (const mon of this.pokemon) {
+					if (mon.name.toLowerCase() === lookup) {
+						target = mon;
+						break;
+					}
+				}
+			}
+		}
+		if (!target) {
+			return this.emitChoiceError(`Can't use item: Could not find target Pokémon "${slotArg}"`);
+		}
+
+		if (!this.applyBagItem(itemId, target, moveSlotArg)) {
+			return false; // applyBagItem emits its own error
+		}
+
+		this.choice.actions.push({
+			choice: 'item',
+			pokemon: this.active[index],
+			item: itemId,
+		} as ChosenAction);
+		return true;
+	}
+
+	private applyBagItem(itemId: string, target: Pokemon, moveSlotArg?: string): boolean {
+		switch (itemId) {
+		case 'potion':
+			return this.applyHeal(target, 20, 'Potion');
+		case 'superpotion':
+			return this.applyHeal(target, 60, 'Super Potion');
+		case 'hyperpotion':
+			return this.applyHeal(target, 120, 'Hyper Potion');
+		case 'maxpotion':
+			return this.applyHeal(target, target.maxhp, 'Max Potion');
+		case 'fullrestore': {
+			if (!this.applyHeal(target, target.maxhp, 'Full Restore')) return false;
+			// Direct status clear — same reasoning as in applyHeal/applyRevive: avoid
+			// emitting `-curestatus` protocol so the Pokefind adapter doesn't crash on
+			// bench-pokémon slot lookup. State reaches Java via next sideupdate.
+			target.status = '';
+			return true;
+		}
+		case 'revive':
+			return this.applyRevive(target, 0.5, 'Revive');
+		case 'maxrevive':
+			return this.applyRevive(target, 1, 'Max Revive');
+		case 'fullheal':
+			return this.applyStatusCure(target, null, 'Full Heal');
+		case 'burnheal':
+			return this.applyStatusCure(target, 'brn', 'Burn Heal');
+		case 'paralyzeheal':
+			return this.applyStatusCure(target, 'par', 'Paralyze Heal');
+		case 'awakening':
+			return this.applyStatusCure(target, 'slp', 'Awakening');
+		case 'iceheal':
+			return this.applyStatusCure(target, 'frz', 'Ice Heal');
+		case 'antidote':
+			return this.applyStatusCure(target, 'psn', 'Antidote');
+		case 'elixir':
+			return this.applyPpRestore(target, 10, 'Elixir');
+		case 'maxelixir':
+			return this.applyPpRestore(target, Infinity, 'Max Elixir');
+		case 'ether':
+			return this.applyPpRestoreSingle(target, moveSlotArg, 10, 'Ether');
+		case 'maxether':
+			return this.applyPpRestoreSingle(target, moveSlotArg, Infinity, 'Max Ether');
+		default:
+			return this.emitChoiceError(`Can't use item: Unknown item "${itemId}"`);
+		}
+	}
+
+	/**
+	 * Status cure. Pass {@code null} to clear any non-volatile status (Full Heal),
+	 * or a specific status id like 'brn'/'par'/'slp'/'frz'/'psn' (the latter also
+	 * matches 'tox' for Antidote). Sets {@code target.status = ''} directly so no
+	 * `-curestatus` protocol is emitted (avoids the bench-pokémon parser crash).
+	 */
+	private applyStatusCure(target: Pokemon, statusId: string | null, label: string): boolean {
+		if (target.fainted) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has fainted`);
+		}
+		if (!target.status) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has no status`);
+		}
+		if (statusId !== null) {
+			const matches = target.status === statusId || (statusId === 'psn' && target.status === 'tox');
+			if (!matches) {
+				return this.emitChoiceError(`Can't use ${label}: ${target.name}'s status is not ${statusId}`);
+			}
+		}
+		target.status = '';
+		return true;
+	}
+
+	/**
+	 * PP restore for a SINGLE move (Ether / Max Ether). Move slot is 1-indexed.
+	 */
+	private applyPpRestoreSingle(target: Pokemon, moveSlotArg: string | undefined, amount: number, label: string): boolean {
+		if (target.fainted) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has fainted`);
+		}
+		if (!moveSlotArg) {
+			return this.emitChoiceError(`Can't use ${label}: No move slot specified`);
+		}
+		const moveSlot = parseInt(moveSlotArg);
+		if (isNaN(moveSlot) || moveSlot < 1 || moveSlot > target.moveSlots.length) {
+			return this.emitChoiceError(`Can't use ${label}: Invalid move slot ${moveSlotArg}`);
+		}
+		const slot = target.moveSlots[moveSlot - 1];
+		if (slot.pp >= slot.maxpp) {
+			return this.emitChoiceError(`Can't use ${label}: ${slot.move} is at full PP`);
+		}
+		slot.pp = Math.min(slot.maxpp, slot.pp + amount);
+		return true;
+	}
+
+	/**
+	 * PP restore for ALL of a target's moves. Used by Elixir / Max Elixir.
+	 */
+	private applyPpRestore(target: Pokemon, amount: number, label: string): boolean {
+		if (target.fainted) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has fainted`);
+		}
+		let any = false;
+		for (const slot of target.moveSlots) {
+			if (slot.pp < slot.maxpp) {
+				slot.pp = Math.min(slot.maxpp, slot.pp + amount);
+				any = true;
+			}
+		}
+		if (!any) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name}'s moves are all at full PP`);
+		}
+		return true;
+	}
+
+	private applyHeal(target: Pokemon, amount: number, label: string): boolean {
+		if (target.fainted) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has fainted (use a Revive)`);
+		}
+		if (target.hp >= target.maxhp) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} is at full HP`);
+		}
+		// Apply HP directly without `this.battle.heal()` so no `-heal` protocol
+		// message is emitted. The Pokefind adapter's parseSlot only resolves
+		// active-slot positions (p1a/p1b); a heal message for a bench pokémon
+		// crashes the Java client. The new HP reaches Java via the next request
+		// sideupdate snapshot.
+		target.hp = Math.min(target.maxhp, target.hp + amount);
+		return true;
+	}
+
+	private applyRevive(target: Pokemon, fraction: number, label: string): boolean {
+		if (!target.fainted) {
+			return this.emitChoiceError(`Can't use ${label}: ${target.name} has not fainted`);
+		}
+		// Mirrors revivalblessing's revive logic in battle.ts.
+		target.side.pokemonLeft++;
+		target.fainted = false;
+		target.faintQueued = false;
+		target.subFainted = false;
+		target.status = '';
+		target.hp = 1; // Required so sethp() works (it bails when hp === 0).
+		target.sethp(Math.floor(target.maxhp * fraction));
+		// NOTE: deliberately not emitting `-heal` here. Revives target bench pokémon,
+		// and the Pokefind adapter's parseSlot only resolves active-slot positions
+		// (p1a/p1b); a heal message for a bench pokémon makes the Java client crash
+		// in DamageHandler.handle (pokemon lookup returns null). The new HP/fainted
+		// state will reach Java via the next request sideupdate snapshot instead.
 		return true;
 	}
 
