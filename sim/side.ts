@@ -1358,8 +1358,9 @@ export class Side {
 		if (!slotArg) {
 			target = this.pokemon[index];
 		} else {
-			// Try numeric (1-indexed party slot) first.
-			const numeric = parseInt(slotArg);
+			// Try numeric (1-indexed party slot) first. Require all-digits so
+			// UUID-as-name targets (e.g. "3f7a...") don't get treated as slot 3.
+			const numeric = /^\d+$/.test(slotArg) ? parseInt(slotArg) : NaN;
 			if (!isNaN(numeric) && numeric >= 1 && numeric <= this.pokemon.length) {
 				target = this.pokemon[numeric - 1];
 			} else {
