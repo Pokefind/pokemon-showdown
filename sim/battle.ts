@@ -1784,6 +1784,23 @@ export class Battle {
 		}
 
 		this.add('turn', this.turn);
+		if (this.pokefindBattle) {
+			const payload: {
+				weather: { id: string; duration: number } | null;
+				terrain: { id: string; duration: number } | null;
+				pseudo: { id: string; duration: number }[];
+				sides: { side: string; conditions: { id: string; duration: number }[] }[];
+			} = {
+				weather: this.field.weatherState.id ? { id: this.field.weatherState.id, duration: this.field.weatherState.duration ?? 0 } : null,
+				terrain: this.field.terrainState.id ? { id: this.field.terrainState.id, duration: this.field.terrainState.duration ?? 0 } : null,
+				pseudo: Object.entries(this.field.pseudoWeather).map(([id, state]) => ({ id, duration: state.duration ?? 0 })),
+				sides: this.sides.map(side => ({
+					side: side.id,
+					conditions: Object.entries(side.sideConditions).map(([id, state]) => ({ id, duration: state.duration ?? 0 })),
+				})),
+			};
+			this.add('-pokefindfield', JSON.stringify(payload));
+		}
 		if (this.gameType === 'multi') {
 			for (const side of this.sides) {
 				if (side.canDynamaxNow()) {
