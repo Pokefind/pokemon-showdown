@@ -3257,4 +3257,12 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			if (!speciesMods.length) throw new Error('This format has no rules that modify base stats.');
 		},
 	},
+	noitems: {
+		effectType: 'Rule',
+		name: 'NoItems',
+		desc: "Held items and bag items are disabled. Enforcement happens Java-side in Item.hasNoItemsRule; this sim rule exists so Showdown recognizes the name when Java sends it in the format string, regardless of which mod/format the battle is using.",
+		onBegin() {
+			this.add('rule', 'No Items: Held items are disabled.');
+		},
+	},
 };

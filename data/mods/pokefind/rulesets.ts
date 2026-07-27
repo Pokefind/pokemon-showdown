@@ -150,5 +150,13 @@ export const Rulesets: import('../../../sim/dex-formats').ModdedFormatDataTable 
 				return [species.baseSpecies + " is not in gen 5."];
 			}
 		},
+	noitems: {
+		effectType: 'Rule',
+		name: 'NoItems',
+		desc: "Forbids the use of held items by both sides — bag items, healing items, and held items are blocked. Enforcement is handled by the Java battle layer in Item.hasNoItemsRule; this sim-side rule exists so Showdown recognizes the name and doesn't throw 'Unrecognized rule' when Java sends it in the format string.",
+		onBegin() {
+			this.add('rule', 'No Items: Held items are disabled.');
+		},
+	},
 	},
 };
