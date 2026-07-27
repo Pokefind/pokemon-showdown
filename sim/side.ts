@@ -1509,12 +1509,17 @@ export class Side {
 		if (target.hp >= target.maxhp) {
 			return this.emitChoiceError(`Can't use ${label}: ${target.name} is at full HP`);
 		}
-		// Apply HP directly without `this.battle.heal()` so no `-heal` protocol
-		// message is emitted. The Pokefind adapter's parseSlot only resolves
-		// active-slot positions (p1a/p1b); a heal message for a bench pokémon
-		// crashes the Java client. The new HP reaches Java via the next request
-		// sideupdate snapshot.
 		target.hp = Math.min(target.maxhp, target.hp + amount);
+		if (target.isActive) {
+			// Active pokémon: emit `-heal` directly so the Pokefind adapter forwards a
+			// DamageHandler event to Java (refreshes HP hologram + broadcasts heal amount).
+			// We can't use battle.heal() — it requires a non-null effect to emit the
+			// protocol message (see battle.ts:2307, `if (!effect) break;`).
+			this.battle.add('-heal', target, target.getHealth);
+		}
+		// Bench: silent. The adapter's parseSlot only resolves active-slot positions
+		// (p1a/p1b); a heal message for a bench pokémon crashes the Java client.
+		// The new HP reaches Java via the next request sideupdate snapshot.
 		return true;
 	}
 
