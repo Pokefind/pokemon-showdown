@@ -58,6 +58,12 @@ export class Pokemon {
 	readonly pokeball: ID;
 	readonly dynamaxLevel: number;
 	readonly gigantamax: boolean;
+	/**
+	 * Pokefind: false when the trainer may not use this Pokemon (over their badge level cap,
+	 * or from a generation whose Elite Four they have not beaten). Read by useMoveInner.
+	 * Lost in the 2026-04-24 upstream rebase; restored 2026-07-30.
+	 */
+	obedient?: boolean;
 
 	/** Transform keeps the original pre-transformed Hidden Power in Gen 2-4. */
 	readonly baseHpType: string;
@@ -349,6 +355,7 @@ export class Pokemon {
 		this.pokeball = toID(this.set.pokeball) || 'pokeball' as ID;
 		this.dynamaxLevel = typeof set.dynamaxLevel === 'number' ? this.battle.clampIntRange(set.dynamaxLevel, 0, 10) : 10;
 		this.gigantamax = this.set.gigantamax || false;
+		this.obedient = this.set.obedient !== undefined ? this.set.obedient : true;
 
 		this.baseMoveSlots = [];
 		this.moveSlots = [];

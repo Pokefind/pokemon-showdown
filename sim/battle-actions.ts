@@ -389,6 +389,12 @@ export class BattleActions {
 		if (sourceEffect && ['instruct', 'custapberry'].includes(sourceEffect.id)) sourceEffect = null;
 
 		let move = this.dex.getActiveMove(moveOrMoveName);
+
+		// Pokefind: a Pokemon the trainer may not use refuses the order outright.
+		if (!pokemon.obedient && Math.random() > 0.02) {
+			this.battle.add('-obedience', pokemon);
+			return false;
+		}
 		pokemon.lastMoveUsed = move;
 		if (move.id === 'weatherball' && zMove) {
 			// Z-Weather Ball only changes types if it's used directly,
