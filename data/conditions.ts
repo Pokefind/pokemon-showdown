@@ -953,4 +953,78 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			return bp;
 		},
 	},
+
+	// Pokefind: raid boss. Applied as a volatile to the boss for raid battles.
+	//
+	// The boss takes NO real damage in the sim and cannot be healed - onDamage returns 0 and
+	// onTryHeal returns false. Every hit is instead reported to Java as |-raiddamage| and the real
+	// HP pool is owned there. That is what lets one boss span several sequential battles: the sim
+	// copy is disposable, so nothing has to be carried between them, and the pool can be any size
+	// without inflating the boss's stats or distorting damage formulas.
+	//
+	// The payload is JSON rather than positional args (which is how Cobblemon's raid mod does it)
+	// because our interpreter already parses a JSON payload for |-pokefindfield| and reuses the same
+	// Gson plumbing. It carries the SOURCE PLAYER so damage attribution survives regardless of how
+	// players are rotated through the p1 slot later.
+	//
+	// Because onDamage returns 0, every effect that keys off damage dealt would silently stop
+	// working, so the four that do are restored by hand below. Anything else damage-derived added
+	// later needs the same treatment and will fail quietly if it is missed.
+	raidboss: {
+		name: 'raidboss',
+		noCopy: true,
+
+		onDamage(damage, target, source, effect) {
+			try {
+				this.add('-raiddamage', JSON.stringify({
+					damage,
+					percent: Math.floor(damage / target.maxhp * 100),
+					maxhp: target.maxhp,
+					target: target.fullname,
+					source: source ? source.fullname : null,
+					sourcePlayer: source && source.side ? source.side.name : null,
+					effect: effect ? effect.id : null,
+					effectType: effect ? effect.effectType : null,
+				}));
+
+				// Restored by hand - see the header comment.
+				if (effect && (effect as any).recoil && source) {
+					const r = (effect as any).recoil;
+					this.damage(Math.round(damage * r[0] / r[1]), source, target, 'recoil');
+				}
+				if (effect && (effect as any).drain && source) {
+					const d = (effect as any).drain;
+					this.heal(Math.round(damage * d[0] / d[1]), source, target, 'drain');
+				}
+				if (effect && effect.id === 'leechseed' && source) {
+					this.heal(target.baseMaxhp / 8, source, target, effect);
+				}
+				if (source && source.item === 'shellbell' && !source.forceSwitchFlag) {
+					this.heal(damage / 8, source, source, source.getItem());
+				}
+			} catch (e) {
+				this.debug('raidboss onDamage failed: ' + e);
+			}
+
+			return 0;
+		},
+
+		onTryHeal(damage, target, source, effect) {
+			if (target.hp === target.maxhp) return false;
+
+			try {
+				this.add('-raidheal', JSON.stringify({
+					heal: damage,
+					percent: Math.floor(damage / target.maxhp * 100),
+					maxhp: target.maxhp,
+					target: target.fullname,
+					effect: effect ? effect.id : null,
+				}));
+			} catch (e) {
+				this.debug('raidboss onTryHeal failed: ' + e);
+			}
+
+			return false;
+		},
+	},
 };
