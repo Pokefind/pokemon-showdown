@@ -120,6 +120,13 @@ export interface PokemonSet {
 	startingMaxHP?: number;
 	status?: string;
 	obedient?: boolean;
+	/**
+	 * Pokefind: marks this Pokemon as a raid boss. Applied as the `raidboss` volatile on switch-in
+	 * (see battle-actions.ts), which makes it immortal in the sim and reports every hit to the server
+	 * as |-raiddamage| instead. Set on the boss's team entry rather than selected by format, so a
+	 * raid needs no special format and any battle can host one.
+	 */
+	raidBoss?: boolean;
 }
 
 export const Teams = new class Teams {

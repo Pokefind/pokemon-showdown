@@ -188,6 +188,14 @@ export class BattleActions {
 			if (!poke.hp) continue;
 			poke.isStarted = true;
 			poke.draggedIn = null;
+
+			// Pokefind: a set flagged raidBoss becomes immortal and reports damage to the server
+			// instead of taking it (see the raidboss condition). Applied here rather than at team
+			// build because volatiles need an active Pokemon, and re-applied on every switch-in so a
+			// boss that is somehow switched out and back does not quietly become mortal again.
+			if (this.battle.pokefindBattle && poke.set.raidBoss && !poke.volatiles['raidboss']) {
+				poke.addVolatile('raidboss');
+			}
 		}
 		return true;
 	}
